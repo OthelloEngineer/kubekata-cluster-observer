@@ -55,20 +55,20 @@ type Deployment struct {
 	Pods         []SimplePod       `json:"containers"`
 	StrategyType string            `json:"strategyType"`
 	SelectorMap  map[string]string `json:"selector"`
-	Namespace    string            `json:"namespace"`
+	Namespace    string            `json:"Namespace"`
 }
 
 type EndPoint struct {
 	Name       string      `json:"name"`
 	Containers []SimplePod `json:"Pods"`
-	Namespace  string      `json:"namespace"`
+	Namespace  string      `json:"Namespace"`
 }
 
 type Service struct {
 	Name        string            `json:"name"`
 	Ports       []int32           `json:"ports"`
 	SelectorMap map[string]string `json:"selector"`
-	Namespace   string            `json:"namespace"`
+	Namespace   string            `json:"Namespace"`
 	Endpoints   []EndPoint        `json:"endpoints"`
 }
 
@@ -84,28 +84,32 @@ const (
 )
 
 type Client struct {
-	client *kubernetes.Clientset
+	Client    *kubernetes.Clientset
+	Namespace string
 }
 
-func NewClient(configLocation string) *Client {
-	client, err := clientcmd.BuildConfigFromFlags("", configLocation)
+func NewClient(configLocation string, namespace string) *Client {
+	rawClient, err := clientcmd.BuildConfigFromFlags("", configLocation)
 	if err != nil {
 		return &Client{}
 	}
-	clientset, err := kubernetes.NewForConfig(client)
+	clientset, err := kubernetes.NewForConfig(rawClient)
 	if err != nil {
 		return &Client{}
 	}
-	// verify that the client is working
-	pod, err := clientset.CoreV1().Pods("jolee18").List(context.Background(), metav1.ListOptions{})
+	// verify that the Client is working
+	client := &Client{
+		Client:    clientset,
+		Namespace: namespace,
+	}
+	pod, err := clientset.CoreV1().Pods(client.Namespace).List(context.Background(), metav1.ListOptions{})
 	if err != nil {
+		fmt.Print("Likely auth error when getting pods: ", err)
 		return &Client{}
 	}
 	fmt.Print(pod.Items[0].Name)
 
-	return &Client{
-		client: clientset,
-	}
+	return client
 }
 
 func GetAllResources(client Client) Cluster {
@@ -120,7 +124,7 @@ func GetAllResources(client Client) Cluster {
 		PersistentVolumeClaim: []PersistentVolumeClaim{},
 	}
 
-	pods, err := client.client.CoreV1().Pods("jolee18").List(context.Background(), listOptions)
+	pods, err := client.Client.CoreV1().Pods(client.Namespace).List(context.Background(), listOptions)
 	fmt.Println("No. pods found: ", len(pods.Items))
 	if err != nil {
 		return cluster
@@ -153,7 +157,7 @@ func GetAllResources(client Client) Cluster {
 		simplePods = append(simplePods, newPod)
 	}
 
-	deployments, err := client.client.AppsV1().Deployments("jolee18").List(context.Background(), listOptions)
+	deployments, err := client.Client.AppsV1().Deployments(client.Namespace).List(context.Background(), listOptions)
 	if err != nil {
 		return cluster
 	}
@@ -172,7 +176,7 @@ func GetAllResources(client Client) Cluster {
 
 	cluster.Deployments = deploymentsList
 
-	services, err := client.client.CoreV1().Services("default").List(context.Background(), listOptions)
+	services, err := client.Client.CoreV1().Services("default").List(context.Background(), listOptions)
 	if err != nil {
 		return cluster
 	}
@@ -197,14 +201,14 @@ func GetAllResources(client Client) Cluster {
 	}
 
 	var persistentVolumes []PersistentVolume
-	persistentVolumeList, err := client.client.CoreV1().PersistentVolumes().List(context.Background(), listOptions)
+	persistentVolumeList, err := client.Client.CoreV1().PersistentVolumes().List(context.Background(), listOptions)
 	if err != nil {
 		fmt.Println("Error getting persistent volumes: ", err)
 		return cluster
 	}
 
 	var persistentVolumeClaims []PersistentVolumeClaim
-	persistentVolumeClaimList, err := client.client.CoreV1().PersistentVolumeClaims("jolee18").List(context.Background(), listOptions)
+	persistentVolumeClaimList, err := client.Client.CoreV1().PersistentVolumeClaims(client.Namespace).List(context.Background(), listOptions)
 	if err != nil {
 		fmt.Println("Error getting persistent volume claims: ", err)
 		return cluster
@@ -283,14 +287,14 @@ func DeleteAllResources(client Client) (int, error) {
 	}
 	numDeletions := 0
 
-	pods, err := client.client.CoreV1().Pods("jolee18").List(context.Background(), listOptions)
+	pods, err := client.Client.CoreV1().Pods(client.Namespace).List(context.Background(), listOptions)
 	if err != nil {
 		fmt.Println("Error getting pods: ", err)
 		return 0, err
 	}
 	fmt.Println("No. pods found: ", len(pods.Items))
 	for _, pod := range pods.Items {
-		err := client.client.CoreV1().Pods("jolee18").Delete(context.Background(), pod.Name, metav1.DeleteOptions{})
+		err := client.Client.CoreV1().Pods(client.Namespace).Delete(context.Background(), pod.Name, metav1.DeleteOptions{})
 		if err != nil {
 			fmt.Println("Error deleting pod: ", err)
 			continue
@@ -298,14 +302,14 @@ func DeleteAllResources(client Client) (int, error) {
 		numDeletions++
 	}
 
-	deployments, err := client.client.AppsV1().Deployments("jolee18").List(context.Background(), listOptions)
+	deployments, err := client.Client.AppsV1().Deployments(client.Namespace).List(context.Background(), listOptions)
 	if err != nil {
 		fmt.Println("Error getting deployments: ", err)
 		return numDeletions, err
 	}
 	fmt.Println("No. deployments found: ", len(deployments.Items))
 	for _, deployment := range deployments.Items {
-		err := client.client.AppsV1().Deployments("jolee18").Delete(context.Background(), deployment.Name, metav1.DeleteOptions{})
+		err := client.Client.AppsV1().Deployments(client.Namespace).Delete(context.Background(), deployment.Name, metav1.DeleteOptions{})
 		if err != nil {
 			fmt.Println("Error deleting deployment: ", err)
 			continue
@@ -313,14 +317,14 @@ func DeleteAllResources(client Client) (int, error) {
 		numDeletions++
 	}
 
-	services, err := client.client.CoreV1().Services("default").List(context.Background(), listOptions)
+	services, err := client.Client.CoreV1().Services("default").List(context.Background(), listOptions)
 	if err != nil {
 		fmt.Println("Error getting services: ", err)
 		return numDeletions, err
 	}
 	fmt.Println("No. services found: ", len(services.Items))
 	for _, service := range services.Items {
-		err := client.client.CoreV1().Services("default").Delete(context.Background(), service.Name, metav1.DeleteOptions{})
+		err := client.Client.CoreV1().Services("default").Delete(context.Background(), service.Name, metav1.DeleteOptions{})
 		if err != nil {
 			fmt.Println("Error deleting service: ", err)
 			continue
@@ -328,14 +332,14 @@ func DeleteAllResources(client Client) (int, error) {
 		numDeletions++
 	}
 
-	persistentVolumeClaims, err := client.client.CoreV1().PersistentVolumeClaims("jolee18").List(context.Background(), listOptions)
+	persistentVolumeClaims, err := client.Client.CoreV1().PersistentVolumeClaims(client.Namespace).List(context.Background(), listOptions)
 	if err != nil {
 		fmt.Println("Error getting persistent volume claims: ", err)
 		return numDeletions, err
 	}
 	fmt.Println("No. persistent volume claims found: ", len(persistentVolumeClaims.Items))
 	for _, persistentVolumeClaim := range persistentVolumeClaims.Items {
-		err := client.client.CoreV1().PersistentVolumeClaims("jolee18").Delete(context.Background(), persistentVolumeClaim.Name, metav1.DeleteOptions{})
+		err := client.Client.CoreV1().PersistentVolumeClaims(client.Namespace).Delete(context.Background(), persistentVolumeClaim.Name, metav1.DeleteOptions{})
 		if err != nil {
 			fmt.Println("Error deleting persistent volume claim: ", err)
 			continue
@@ -343,14 +347,14 @@ func DeleteAllResources(client Client) (int, error) {
 		numDeletions++
 	}
 
-	persistentVolumes, err := client.client.CoreV1().PersistentVolumes().List(context.Background(), listOptions)
+	persistentVolumes, err := client.Client.CoreV1().PersistentVolumes().List(context.Background(), listOptions)
 	if err != nil {
 		fmt.Println("Error getting persistent volumes: ", err)
 		return numDeletions, err
 	}
 	fmt.Println("No. persistent volumes found: ", len(persistentVolumes.Items))
 	for _, persistentVolume := range persistentVolumes.Items {
-		err := client.client.CoreV1().PersistentVolumes().Delete(context.Background(), persistentVolume.Name, metav1.DeleteOptions{})
+		err := client.Client.CoreV1().PersistentVolumes().Delete(context.Background(), persistentVolume.Name, metav1.DeleteOptions{})
 		if err != nil {
 			fmt.Println("Error deleting persistent volume: ", err)
 			continue

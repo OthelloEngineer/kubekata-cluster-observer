@@ -1,8 +1,9 @@
 package levels
 
 import (
-	"github.com/OthelloEngineer/kubekata-cluster-observer/client"
 	"strings"
+
+	"github.com/OthelloEngineer/kubekata-cluster-observer/client"
 )
 
 /*

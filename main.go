@@ -2,21 +2,24 @@ package main
 
 import (
 	"fmt"
-	"github.com/OthelloEngineer/kubekata-cluster-observer/client"
-	"github.com/OthelloEngineer/kubekata-cluster-observer/levels"
 	"io"
-	"k8s.io/apimachinery/pkg/util/json"
 	"net/http"
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/OthelloEngineer/kubekata-cluster-observer/client"
+	"github.com/OthelloEngineer/kubekata-cluster-observer/levels"
+	"k8s.io/apimachinery/pkg/util/json"
 )
 
 func main() {
-
 	kubeclient := new(client.Client)
 	kubeclient.Namespace = ""
-	levelRepository := new(levels.LevelRepository)
+	levelRepository := levels.NewLevelRepository()
+	levelRepository.SetCurrentLevel(1)
+	currentLevel, _ := levelRepository.GetCurrentLevel()
+	fmt.Println("Starting server with current level", currentLevel)
 	http.HandleFunc("/upload", func(w http.ResponseWriter, r *http.Request) {
 		configText, _ := io.ReadAll(r.Body)
 		err := os.WriteFile("config", configText, 0644)
@@ -82,6 +85,7 @@ func main() {
 		}
 		level, err := levelRepository.GetCurrentLevel()
 		if err != nil {
+			_, _ = w.Write([]byte("Error getting current level, likely no level set"))
 			return
 		}
 		desiredCluster := level.GetDesiredCluster()
@@ -98,6 +102,7 @@ func main() {
 		}
 		level, err := levelRepository.GetCurrentLevel()
 		if err != nil {
+			w.Write([]byte("Error getting current level, likely no level set"))
 			return
 		}
 		cluster := client.GetAllResources(*kubeclient)
@@ -105,6 +110,6 @@ func main() {
 		w.Write([]byte(diff))
 	})
 
-	http.ListenAndServe(":8081", nil)
+	http.ListenAndServe(":8080", nil)
 
 }

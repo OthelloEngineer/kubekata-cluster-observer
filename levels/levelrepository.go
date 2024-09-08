@@ -2,6 +2,7 @@ package levels
 
 import (
 	"errors"
+
 	"github.com/OthelloEngineer/kubekata-cluster-observer/client"
 )
 
@@ -15,6 +16,17 @@ type Level interface {
 type LevelRepository struct {
 	levels       []Level
 	currentLevel int
+}
+
+func NewLevelRepository() *LevelRepository {
+	levels := []Level{
+		new(Level1),
+	}
+	repo := &LevelRepository{
+		levels:       levels,
+		currentLevel: 1,
+	}
+	return repo
 }
 
 func (s *LevelRepository) GetAllLevels() []Level {

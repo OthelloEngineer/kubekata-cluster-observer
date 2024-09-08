@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"fmt"
+
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	_ "k8s.io/client-go/applyconfigurations/core/v1"
@@ -39,7 +40,7 @@ type Container struct {
 	Image    string   `json:"image"`
 	Requests Resource `json:"requests"`
 	Limits   Resource `json:"limits"`
-	Envs     []string `json:"environment variables"`
+	Envs     []string `json:"envs"`
 	Mount    []string `json:"mounts"`
 }
 
@@ -52,15 +53,15 @@ type SimplePod struct {
 type Deployment struct {
 	Name         string            `json:"name"`
 	Replicas     int               `json:"replicas"`
-	Pods         []SimplePod       `json:"containers"`
+	Pods         []SimplePod       `json:"pods"`
 	StrategyType string            `json:"strategyType"`
 	SelectorMap  map[string]string `json:"selector"`
-	Namespace    string            `json:"Namespace"`
+	Namespace    string            `json:"namespace"`
 }
 
 type EndPoint struct {
 	Name       string      `json:"name"`
-	Containers []SimplePod `json:"Pods"`
+	Containers []SimplePod `json:"pods"`
 	Namespace  string      `json:"Namespace"`
 }
 
@@ -68,7 +69,7 @@ type Service struct {
 	Name        string            `json:"name"`
 	Ports       []int32           `json:"ports"`
 	SelectorMap map[string]string `json:"selector"`
-	Namespace   string            `json:"Namespace"`
+	Namespace   string            `json:"namespace"`
 	Endpoints   []EndPoint        `json:"endpoints"`
 }
 

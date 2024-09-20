@@ -28,6 +28,10 @@ func main() {
 			return
 		}
 		dirs, err := os.ReadDir(".")
+		if err != nil {
+			fmt.Print("Error reading directory")
+			return
+		}
 		for _, dir := range dirs {
 			fmt.Println(dir.Name())
 		}
@@ -48,6 +52,7 @@ func main() {
 		}
 		fmt.Println("successfully uploaded config", kubeclient)
 		if err != nil {
+			fmt.Print("Error reading request body")
 			return
 		}
 	})
@@ -56,6 +61,7 @@ func main() {
 		if kubeclient.Namespace == "" {
 			_, err := w.Write([]byte("No namespace set"))
 			if err != nil {
+				fmt.Print("Error writing response")
 				return
 			}
 		}
@@ -68,6 +74,7 @@ func main() {
 		if kubeclient.Namespace == "" {
 			_, err := w.Write([]byte("No namespace set"))
 			if err != nil {
+				fmt.Print("Error writing response")
 				return
 			}
 		}
@@ -75,11 +82,13 @@ func main() {
 		if err != nil {
 			_, err := w.Write([]byte("Deleted " + string(rune(num)) + " However encountered this error" + err.Error()))
 			if err != nil {
+				fmt.Print("Error writing response")
 				return
 			}
 		} else {
 			_, err := w.Write([]byte("Deleted " + string(rune(num)) + " resources"))
 			if err != nil {
+				fmt.Print("Error writing response")
 				return
 			}
 		}
@@ -89,6 +98,7 @@ func main() {
 		if kubeclient.Namespace == "" {
 			_, err := w.Write([]byte("No namespace set"))
 			if err != nil {
+				fmt.Println("Error writing response")
 				return
 			}
 		}
@@ -106,6 +116,7 @@ func main() {
 		if kubeclient.Namespace == "" {
 			_, err := w.Write([]byte("No namespace set"))
 			if err != nil {
+				fmt.Print("Error writing response")
 				return
 			}
 		}
@@ -120,6 +131,9 @@ func main() {
 		w.Write([]byte(diff))
 	})
 
-	http.ListenAndServe(":8080", nil)
+	err := http.ListenAndServe(":8081", nil)
+	if err != nil {
+		fmt.Print("Error starting server," + err.Error())
+	}
 
 }

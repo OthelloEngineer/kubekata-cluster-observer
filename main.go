@@ -27,6 +27,11 @@ func main() {
 			fmt.Print("Error writing config file")
 			return
 		}
+		dirs, err := os.ReadDir(".")
+		for _, dir := range dirs {
+			fmt.Println(dir.Name())
+		}
+
 		nsRegex := `namespace: (.*)`
 		compileNsRegex, _ := regexp.Compile(nsRegex)
 		namespace := compileNsRegex.FindStringSubmatch(string(configText))[0]
@@ -37,6 +42,10 @@ func main() {
 			return
 		}
 		kubeclient = client.NewClient("./config", namespace)
+		if kubeclient == nil {
+			fmt.Print("Error creating client; retrying...")
+			kubeclient = client.NewClient("./config", namespace)
+		}
 		fmt.Println("successfully uploaded config", kubeclient)
 		if err != nil {
 			return
@@ -93,7 +102,7 @@ func main() {
 		w.Write(desiredClusterJSON)
 	})
 
-	http.HandleFunc("/diff", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request) {
 		if kubeclient.Namespace == "" {
 			_, err := w.Write([]byte("No namespace set"))
 			if err != nil {
@@ -106,7 +115,8 @@ func main() {
 			return
 		}
 		cluster := client.GetAllResources(*kubeclient)
-		diff := level.GetClusterDiff(cluster)
+		msg := r.URL.Query().Get("msg")
+		diff := level.GetClusterStatus(cluster, msg)
 		w.Write([]byte(diff))
 	})
 

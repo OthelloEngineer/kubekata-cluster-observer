@@ -45,7 +45,7 @@ func (l *Level1) GetDesiredCluster() client.Cluster {
 	}
 }
 
-func (l *Level1) GetClusterDiff(cluster client.Cluster) string {
+func (l *Level1) GetClusterStatus(cluster client.Cluster, msg string) string {
 	if len(cluster.Deployments) != 1 {
 		return "There should be 1 deployment; found 	" + string(rune(len(cluster.Deployments)))
 	}
@@ -56,7 +56,7 @@ func (l *Level1) GetClusterDiff(cluster client.Cluster) string {
 	}
 
 	pod := deployment.Pods[0]
-	if pod.Name != "nginx" {
+	if strings.HasPrefix(pod.Name, "nginx") == false {
 		return "Pod was found but only named nginx; instead a pod named " + pod.Name + " was found"
 	}
 
@@ -65,11 +65,8 @@ func (l *Level1) GetClusterDiff(cluster client.Cluster) string {
 	}
 
 	container := pod.Containers[0]
-	if container.Name != "nginx" {
-		return "Container was found but only named nginx; instead a container named " + container.Name + " was found"
-	}
 
-	if !(strings.Contains(container.Image, "nginx:")) {
+	if !(strings.Contains(container.Image, "nginx")) {
 		return "Container image should be nginx; found: " + container.Image
 	}
 
@@ -81,5 +78,5 @@ func (l *Level1) GetClusterDiff(cluster client.Cluster) string {
 		return "Container port should be 80; found: " + string(rune(container.Ports[0]))
 	}
 
-	return ""
+	return "success"
 }

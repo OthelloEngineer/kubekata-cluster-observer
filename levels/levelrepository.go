@@ -10,7 +10,7 @@ type Level interface {
 	GetID() int
 	GetName() string
 	GetDesiredCluster() client.Cluster
-	GetClusterDiff(client.Cluster) string
+	GetClusterStatus(cluster client.Cluster, msg string) string
 }
 
 type LevelRepository struct {

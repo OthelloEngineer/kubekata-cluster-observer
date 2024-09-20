@@ -92,6 +92,7 @@ type Client struct {
 func NewClient(configLocation string, namespace string) *Client {
 	rawClient, err := clientcmd.BuildConfigFromFlags("", configLocation)
 	if err != nil {
+		fmt.Println("Error building config from flags: ", err)
 		return &Client{}
 	}
 	clientset, err := kubernetes.NewForConfig(rawClient)
@@ -107,6 +108,10 @@ func NewClient(configLocation string, namespace string) *Client {
 	if err != nil {
 		fmt.Print("Likely auth error when getting pods: ", err)
 		return &Client{}
+	}
+	if len(pod.Items) == 0 {
+		fmt.Print("No pods found in namespace: ", namespace)
+		return client
 	}
 	fmt.Print(pod.Items[0].Name)
 
@@ -128,6 +133,7 @@ func GetAllResources(client Client) Cluster {
 	pods, err := client.Client.CoreV1().Pods(client.Namespace).List(context.Background(), listOptions)
 	fmt.Println("No. pods found: ", len(pods.Items))
 	if err != nil {
+		fmt.Println("Error getting pods: ", err)
 		return cluster
 	}
 	var simplePods []SimplePod

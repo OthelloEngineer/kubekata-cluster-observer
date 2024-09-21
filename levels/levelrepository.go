@@ -21,6 +21,7 @@ type LevelRepository struct {
 func NewLevelRepository() *LevelRepository {
 	levels := []Level{
 		new(Level1),
+		new(Level2),
 	}
 	repo := &LevelRepository{
 		levels:       levels,
@@ -34,6 +35,9 @@ func (s *LevelRepository) GetAllLevels() []Level {
 }
 
 func (s *LevelRepository) GetLevelByID(id int) (Level, error) {
+	if s.currentLevel > len(s.levels) {
+		return nil, errors.New("current level out of bounds")
+	}
 	for _, level := range s.levels {
 		if level.GetID() == id {
 			return level, nil
@@ -49,6 +53,7 @@ func (s *LevelRepository) GetCurrentLevel() (Level, error) {
 	return s.GetLevelByID(s.currentLevel)
 }
 
-func (s *LevelRepository) SetCurrentLevel(id int) {
+func (s *LevelRepository) SetCurrentLevel(id int) (Level, error) {
 	s.currentLevel = id
+	return s.GetLevelByID(id)
 }

@@ -1,6 +1,7 @@
 package levels
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/OthelloEngineer/kubekata-cluster-observer/client"
@@ -47,12 +48,12 @@ func (l *Level1) GetDesiredCluster() client.Cluster {
 
 func (l *Level1) GetClusterStatus(cluster client.Cluster, msg string) string {
 	if len(cluster.Deployments) != 1 {
-		return "There should be 1 deployment; found 	" + string(rune(len(cluster.Deployments)))
+		return fmt.Sprintf("There should be 1 deployment; found: %d", len(cluster.Deployments))
 	}
 
 	deployment := cluster.Deployments[0]
 	if len(deployment.Pods) != 1 {
-		return "There should be 1 pod; found:" + string(rune(len(deployment.Pods)))
+		return fmt.Sprintf("There should be 1 pod; found: %d", len(deployment.Pods))
 	}
 
 	pod := deployment.Pods[0]
@@ -61,7 +62,7 @@ func (l *Level1) GetClusterStatus(cluster client.Cluster, msg string) string {
 	}
 
 	if len(pod.Containers) != 1 {
-		return "There should be 1 container; found: " + string(rune(len(pod.Containers)))
+		return fmt.Sprintf("There should be 1 container; found: %d", len(pod.Containers))
 	}
 
 	container := pod.Containers[0]
@@ -71,11 +72,11 @@ func (l *Level1) GetClusterStatus(cluster client.Cluster, msg string) string {
 	}
 
 	if len(container.Ports) != 1 {
-		return "There should be 1 port; found: " + string(rune(len(container.Ports)))
+		return fmt.Sprintf("There should be 1 port; found: %d", len(container.Ports))
 	}
 
 	if container.Ports[0] != 80 {
-		return "Container port should be 80; found: " + string(rune(container.Ports[0]))
+		return fmt.Sprintf("Port should be 80; found: %d", container.Ports[0])
 	}
 
 	return "success"

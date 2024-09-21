@@ -45,9 +45,10 @@ type Container struct {
 }
 
 type SimplePod struct {
-	Name       string      `json:"name"`
-	Containers []Container `json:"containers"`
-	Mounts     []PodVolume `json:"mounts"`
+	Name       string            `json:"name"`
+	Containers []Container       `json:"containers"`
+	Mounts     []PodVolume       `json:"mounts"`
+	Labels     map[string]string `json:"labels"`
 }
 
 type Deployment struct {
@@ -159,6 +160,7 @@ func GetAllResources(client Client) Cluster {
 			Name:       pod.Name,
 			Containers: containers,
 			Mounts:     getMountsFromV1Pod(pod),
+			Labels:     pod.Labels,
 		}
 		fmt.Print("Found pod: ", newPod.Name)
 		simplePods = append(simplePods, newPod)
@@ -171,17 +173,47 @@ func GetAllResources(client Client) Cluster {
 	fmt.Println("No. deployments found: ", len(deployments.Items))
 	var deploymentsList []Deployment
 	for _, deployment := range deployments.Items {
+		deploymentPods := []SimplePod{}
+		for _, pod := range simplePods {
+			labels := pod.Labels
+			if labels == nil {
+				labels = make(map[string]string)
+			}
+			fmt.Println("Pod labels: ", labels)
+			for key, value := range deployment.Spec.Selector.MatchLabels {
+				fmt.Println("deployment - Key: ", key, "Value: ", value)
+				fmt.Println("pod - Key: ", key, "Value: ", labels[key])
+				if labels[key] == value {
+					deploymentPods = append(deploymentPods, pod)
+				}
+			}
+		}
 		deploymentsList = append(deploymentsList, Deployment{
 			Name:         deployment.Name,
 			Replicas:     int(*deployment.Spec.Replicas),
-			Pods:         simplePods,
+			Pods:         deploymentPods,
 			StrategyType: string(deployment.Spec.Strategy.Type),
 			SelectorMap:  deployment.Spec.Selector.MatchLabels,
 			Namespace:    deployment.Namespace,
 		})
+
 	}
 
 	cluster.Deployments = deploymentsList
+
+	strayPods := findStrayPods(deploymentsList, simplePods) // this is a crude way of tracking unmanaged pods
+	if len(strayPods) > 0 {
+		fmt.Println("Stray pods found: ", len(strayPods))
+		strayDeployment := Deployment{
+			Name:         "Stray Pods",
+			Replicas:     len(strayPods),
+			Pods:         strayPods,
+			StrategyType: "None",
+			SelectorMap:  map[string]string{},
+			Namespace:    client.Namespace,
+		}
+		cluster.Deployments = append(cluster.Deployments, strayDeployment)
+	}
 
 	services, err := client.Client.CoreV1().Services("default").List(context.Background(), listOptions)
 	if err != nil {
@@ -286,6 +318,25 @@ func getPortsFromV1Service(service v1.Service) []int32 {
 		ports = append(ports, port.Port)
 	}
 	return ports
+}
+
+func findStrayPods(deployments []Deployment, pods []SimplePod) []SimplePod {
+	var strayPods []SimplePod
+	for _, pod := range pods {
+		found := false
+		for _, deployment := range deployments {
+			for _, deploymentPod := range deployment.Pods {
+				if pod.Name == deploymentPod.Name {
+					found = true
+					break
+				}
+			}
+		}
+		if !found {
+			strayPods = append(strayPods, pod)
+		}
+	}
+	return strayPods
 }
 
 func DeleteAllResources(client Client) (int, error) {

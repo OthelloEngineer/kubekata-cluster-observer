@@ -27,24 +27,9 @@ func main() {
 			fmt.Print("Error writing config file")
 			return
 		}
-		dirs, err := os.ReadDir(".")
-		if err != nil {
-			fmt.Print("Error reading directory")
-			return
-		}
-		for _, dir := range dirs {
-			fmt.Println(dir.Name())
-		}
 
-		nsRegex := `namespace: (.*)`
-		compileNsRegex, _ := regexp.Compile(nsRegex)
-		namespace := compileNsRegex.FindStringSubmatch(string(configText))[0]
-		namespace = strings.Split(namespace, " ")[1]
-		fmt.Println("Namespace found in config", namespace)
-		if namespace == "" {
-			fmt.Print("Namespace not found in config")
-			return
-		}
+		namespace := getNamespace(configText)
+		fmt.Println("assuming namespace: ", namespace)
 		kubeclient = client.NewClient("./config", namespace)
 		if kubeclient == nil {
 			fmt.Print("Error creating client; retrying...")
@@ -52,6 +37,8 @@ func main() {
 		}
 		fmt.Println("successfully uploaded config", kubeclient)
 		if err != nil {
+			w.Write([]byte("Error reading request body"))
+			w.WriteHeader(500)
 			fmt.Print("Error reading request body")
 			return
 		}
@@ -122,12 +109,17 @@ func main() {
 		}
 		level, err := levelRepository.GetCurrentLevel()
 		if err != nil {
-			w.Write([]byte("Error getting current level, likely no level set"))
+			msg := "Error getting current level, likely no level set" + err.Error()
+			w.Write([]byte(msg))
 			return
 		}
 		cluster := client.GetAllResources(*kubeclient)
 		msg := r.URL.Query().Get("msg")
 		diff := level.GetClusterStatus(cluster, msg)
+		fmt.Println("Status:", diff)
+		if diff == "success" {
+			levelRepository.SetCurrentLevel(level.GetID() + 1)
+		}
 		w.Write([]byte(diff))
 	})
 
@@ -136,4 +128,16 @@ func main() {
 		fmt.Print("Error starting server," + err.Error())
 	}
 
+}
+
+func getNamespace(configText []byte) string {
+	nsRegex := `namespace: (.*)`
+	compileNsRegex, _ := regexp.Compile(nsRegex)
+	namespace := compileNsRegex.FindStringSubmatch(string(configText))
+	if len(namespace) < 1 {
+		fmt.Println("Could not find namespace using regex 'namespace: (.*)' therefore assuming: namespace: default")
+		namespace = []string{"namespace: default"}
+	}
+	namespace = strings.Split(namespace[0], " ")
+	return namespace[1]
 }

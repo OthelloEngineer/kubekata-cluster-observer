@@ -8,6 +8,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	_ "k8s.io/client-go/applyconfigurations/core/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
@@ -90,7 +91,7 @@ type Client struct {
 	Namespace string
 }
 
-func NewClient(configLocation string, namespace string) *Client {
+func NewClientFromConfig(configLocation string, namespace string) *Client {
 	rawClient, err := clientcmd.BuildConfigFromFlags("", configLocation)
 	if err != nil {
 		fmt.Println("Error building config from flags: ", err)
@@ -117,6 +118,44 @@ func NewClient(configLocation string, namespace string) *Client {
 	fmt.Print(pod.Items[0].Name)
 
 	return client
+}
+
+func ClientFromServiceAccount(namespace string) *Client {
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		fmt.Println("Error building in cluster config: ", err)
+		return &Client{}
+	}
+	client, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		fmt.Println("Error building client from config: ", err)
+		return &Client{}
+	}
+
+	pod := client.CoreV1().Pods(namespace)
+	if pod == nil {
+		fmt.Println("Error getting pods: ", err)
+		return &Client{
+			Client:    client,
+			Namespace: namespace,
+		}
+	}
+	podList, err := pod.List(context.Background(), metav1.ListOptions{})
+	if err != nil {
+		fmt.Println("Error getting pods: ", err)
+		return &Client{
+			Client:    client,
+			Namespace: namespace,
+		}
+	}
+
+	fmt.Println("No. pods found: ", len(podList.Items))
+
+	return &Client{
+		Client:    client,
+		Namespace: namespace,
+	}
+
 }
 
 func GetAllResources(client Client) Cluster {

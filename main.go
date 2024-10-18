@@ -14,8 +14,8 @@ import (
 )
 
 func main() {
-	kubeclient := new(client.Client)
-	kubeclient.Namespace = ""
+	namespace := "default"
+	kubeclient := client.ClientFromServiceAccount(namespace)
 	levelRepository := levels.NewLevelRepository()
 	levelRepository.SetCurrentLevel(1)
 	currentLevel, _ := levelRepository.GetCurrentLevel()
@@ -24,22 +24,21 @@ func main() {
 		configText, _ := io.ReadAll(r.Body)
 		err := os.WriteFile("config", configText, 0644)
 		if err != nil {
-			fmt.Print("Error writing config file")
+			fmt.Print("Error writing config file: ", err)
 			return
 		}
 
 		namespace := getNamespace(configText)
 		fmt.Println("assuming namespace: ", namespace)
-		kubeclient = client.NewClient("./config", namespace)
+		kubeclient = client.NewClientFromConfig("./config", "default")
 		if kubeclient == nil {
 			fmt.Print("Error creating client; retrying...")
-			kubeclient = client.NewClient("./config", namespace)
+			kubeclient = client.NewClientFromConfig("./config", "default")
 		}
 		fmt.Println("successfully uploaded config", kubeclient)
+		_, err = w.Write([]byte("Successfully uploaded config"))
 		if err != nil {
-			w.Write([]byte("Error reading request body"))
-			w.WriteHeader(500)
-			fmt.Print("Error reading request body")
+			fmt.Print("Error writing response, " + err.Error())
 			return
 		}
 	})

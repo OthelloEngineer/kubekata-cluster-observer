@@ -6,65 +6,59 @@ import (
 	"github.com/OthelloEngineer/kubekata-cluster-observer/client"
 )
 
-func CompareCluster(currentCluster client.Cluster, expectedCluster client.Cluster) string {
-	if len(currentCluster.Deployments) != len(expectedCluster.Deployments) {
-		return fmt.Sprintf("There should be %d deployments; found: %d", len(expectedCluster.Deployments), len(currentCluster.Deployments))
+func CompareDeployments(currentDeployment client.Deployment, expectedDeployment client.Deployment) string {
+
+	if currentDeployment.Name != expectedDeployment.Name {
+		return fmt.Sprintf("Deployment name should be %s; found: %s", expectedDeployment.Name, currentDeployment.Name)
 	}
 
-	for i, expectedDeployment := range expectedCluster.Deployments {
-		currentDeployment := currentCluster.Deployments[i]
-		if currentDeployment.Name != expectedDeployment.Name {
-			return fmt.Sprintf("Deployment name should be %s; found: %s", expectedDeployment.Name, currentDeployment.Name)
+	if currentDeployment.Replicas != expectedDeployment.Replicas {
+		return fmt.Sprintf("Deployment %s should have %d replicas; found: %d", currentDeployment.Name, expectedDeployment.Replicas, currentDeployment.Replicas)
+	}
+
+	if len(currentDeployment.Pods) != len(expectedDeployment.Pods) {
+		return fmt.Sprintf("Deployment %s should have %d pods; found: %d", currentDeployment.Name, len(expectedDeployment.Pods), len(currentDeployment.Pods))
+	}
+
+	for j, expectedPod := range expectedDeployment.Pods {
+		currentPod := currentDeployment.Pods[j]
+		if currentPod.Name != expectedPod.Name {
+			return fmt.Sprintf("Pod name should be %s; found: %s", expectedPod.Name, currentPod.Name)
 		}
 
-		if currentDeployment.Replicas != expectedDeployment.Replicas {
-			return fmt.Sprintf("Deployment %s should have %d replicas; found: %d", currentDeployment.Name, expectedDeployment.Replicas, currentDeployment.Replicas)
+		if len(currentPod.Containers) != len(expectedPod.Containers) {
+			return fmt.Sprintf("Pod %s should have %d containers; found: %d", currentPod.Name, len(expectedPod.Containers), len(currentPod.Containers))
 		}
 
-		if len(currentDeployment.Pods) != len(expectedDeployment.Pods) {
-			return fmt.Sprintf("Deployment %s should have %d pods; found: %d", currentDeployment.Name, len(expectedDeployment.Pods), len(currentDeployment.Pods))
-		}
-
-		for j, expectedPod := range expectedDeployment.Pods {
-			currentPod := currentDeployment.Pods[j]
-			if currentPod.Name != expectedPod.Name {
-				return fmt.Sprintf("Pod name should be %s; found: %s", expectedPod.Name, currentPod.Name)
+		for k, expectedContainer := range expectedPod.Containers {
+			currentContainer := currentPod.Containers[k]
+			if currentContainer.Name != expectedContainer.Name {
+				return fmt.Sprintf("Container name should be %s; found: %s", expectedContainer.Name, currentContainer.Name)
 			}
 
-			if len(currentPod.Containers) != len(expectedPod.Containers) {
-				return fmt.Sprintf("Pod %s should have %d containers; found: %d", currentPod.Name, len(expectedPod.Containers), len(currentPod.Containers))
+			if currentContainer.Image != expectedContainer.Image {
+				return fmt.Sprintf("Container %s should have image %s; found: %s", currentContainer.Name, expectedContainer.Image, currentContainer.Image)
 			}
 
-			for k, expectedContainer := range expectedPod.Containers {
-				currentContainer := currentPod.Containers[k]
-				if currentContainer.Name != expectedContainer.Name {
-					return fmt.Sprintf("Container name should be %s; found: %s", expectedContainer.Name, currentContainer.Name)
+			if len(currentContainer.Ports) != len(expectedContainer.Ports) {
+				return fmt.Sprintf("Container %s should have %d ports; found: %d", currentContainer.Name, len(expectedContainer.Ports), len(currentContainer.Ports))
+			}
+
+			for l, expectedPort := range expectedContainer.Ports {
+				currentPort := currentContainer.Ports[l]
+				if currentPort != expectedPort {
+					return fmt.Sprintf("Container %s should have port %d; found: %d", currentContainer.Name, expectedPort, currentPort)
+				}
+			}
+			if len(currentContainer.Mount) != 0 && len(expectedContainer.Mount) == 0 {
+				if len(currentContainer.Mount) != len(expectedContainer.Mount) {
+					return fmt.Sprintf("Container %s should have %d mounts; found: %d", currentContainer.Name, len(expectedContainer.Mount), len(currentContainer.Mount))
 				}
 
-				if currentContainer.Image != expectedContainer.Image {
-					return fmt.Sprintf("Container %s should have image %s; found: %s", currentContainer.Name, expectedContainer.Image, currentContainer.Image)
-				}
-
-				if len(currentContainer.Ports) != len(expectedContainer.Ports) {
-					return fmt.Sprintf("Container %s should have %d ports; found: %d", currentContainer.Name, len(expectedContainer.Ports), len(currentContainer.Ports))
-				}
-
-				for l, expectedPort := range expectedContainer.Ports {
-					currentPort := currentContainer.Ports[l]
-					if currentPort != expectedPort {
-						return fmt.Sprintf("Container %s should have port %d; found: %d", currentContainer.Name, expectedPort, currentPort)
-					}
-				}
-				if len(currentContainer.Mount) != 0 && len(expectedContainer.Mount) == 0 {
-					if len(currentContainer.Mount) != len(expectedContainer.Mount) {
-						return fmt.Sprintf("Container %s should have %d mounts; found: %d", currentContainer.Name, len(expectedContainer.Mount), len(currentContainer.Mount))
-					}
-
-					for m, expectedMount := range expectedContainer.Mount {
-						currentMount := currentContainer.Mount[m]
-						if currentMount != expectedMount {
-							return fmt.Sprintf("Mount name should be %s; found: %s", expectedMount, currentMount)
-						}
+				for m, expectedMount := range expectedContainer.Mount {
+					currentMount := currentContainer.Mount[m]
+					if currentMount != expectedMount {
+						return fmt.Sprintf("Mount name should be %s; found: %s", expectedMount, currentMount)
 					}
 				}
 			}

@@ -1,6 +1,9 @@
 package levels
 
-import "github.com/OthelloEngineer/kubekata-cluster-observer/client"
+import (
+	"github.com/OthelloEngineer/kubekata-cluster-observer/client"
+	"github.com/OthelloEngineer/kubekata-cluster-observer/levels/levelutils"
+)
 
 type dns_and_services struct {
 	isFinished bool
@@ -33,13 +36,27 @@ func getExpectedService() client.Service {
 		map[string]string{
 			"app": "hello-go",
 		},
-		[]client.EndPoint{},
+		[]client.EndPoint{
+			client.NewEndPoint("hello-go", "", expectedDeployment().Pods[0]),
+		},
 		"NodePort",
 	)
 	return service
 }
 
 func (l *dns_and_services) GetClusterStatus(cluster client.Cluster, msg string) string {
-	result := compareDeploymentAndService(expectedDeployment(), getExpectedService(), cluster.Deployments, cluster.Services)
-	return result
+	if len(cluster.Services) != 1 {
+		return "There should be 1 service; found: " + string(len(cluster.Services))
+	}
+	statusMsg := levelutils.CompareServices(cluster.Services[0], getExpectedService())
+	if statusMsg != "success" {
+		return statusMsg
+	}
+
+	statusMsg = levelutils.CompareDeployments(cluster.Deployments[0], expectedDeployment())
+	if statusMsg != "success" {
+		return statusMsg
+	}
+
+	return statusMsg
 }

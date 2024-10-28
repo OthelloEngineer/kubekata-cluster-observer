@@ -51,6 +51,7 @@ func TestIdenticalClusters(t *testing.T) {
 		[]client.EndPoint{
 			client.NewEndPoint("ep1", "namespace1", simplePod1),
 		},
+		"NodePort",
 	)
 
 	pv1 := client.NewPersistentVolume("pv1", "1Gi", "rwo")
@@ -71,7 +72,7 @@ func TestIdenticalClusters(t *testing.T) {
 		PersistentVolumeClaim: []client.PersistentVolumeClaim{pvc1},
 	}
 
-	result := levelutils.CompareCluster(currentCluster, expectedCluster)
+	result := levelutils.CompareDeployments(currentCluster.Deployments[0], expectedCluster.Deployments[0])
 	if result != "success" {
 		t.Errorf("Expected success, got %s", result)
 	}
@@ -131,6 +132,7 @@ func TestDifferentDeploy(t *testing.T) {
 		[]client.EndPoint{
 			client.NewEndPoint("ep1", "namespace1", simplePod1),
 		},
+		"NodePort",
 	)
 
 	pv1 := client.NewPersistentVolume("pv1", "1Gi", "rwo")
@@ -151,7 +153,7 @@ func TestDifferentDeploy(t *testing.T) {
 		PersistentVolumeClaim: []client.PersistentVolumeClaim{pvc1},
 	}
 
-	result := levelutils.CompareCluster(currentCluster, expectedCluster)
+	result := levelutils.CompareDeployments(currentCluster.Deployments[0], expectedCluster.Deployments[0])
 	if result != "Deployment name should be deploy2; found: deploy1" {
 		t.Errorf("Expected Deployment name should be deploy2; found: deploy1, got %s", result)
 	}

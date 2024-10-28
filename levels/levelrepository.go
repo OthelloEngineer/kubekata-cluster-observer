@@ -25,7 +25,7 @@ func NewLevelRepository() *LevelRepository {
 		new(ComponentsOfKubeKata),
 		new(DeployingTheApp),
 		new(CurlingTheApp),
-		new(dns_and_services)
+		new(dns_and_services),
 	}
 	repo := &LevelRepository{
 		levels:       levels,

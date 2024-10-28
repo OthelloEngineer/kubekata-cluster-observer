@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -11,76 +12,6 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
-
-type PodVolume struct {
-	Name                      string `json:"name"`
-	PersistentVolumeClaimName string `json:"persistentVolumeClaimname"`
-}
-
-type PersistentVolume struct {
-	Name       string `json:"name"`
-	Capacity   string `json:"storage"`
-	AccessMode string `json:"accessMode"`
-}
-
-type PersistentVolumeClaim struct {
-	Name             string           `json:"name"`
-	Capacity         string           `json:"storage"`
-	AccessMod        string           `json:"accessMode"`
-	PersistentVolume PersistentVolume `json:"persistentVolume"`
-}
-
-type Resource struct {
-	CPU    string `json:"cpu"`
-	Memory string `json:"memory"`
-}
-
-type Container struct {
-	Name     string   `json:"name"`
-	Ports    []int32  `json:"ports"`
-	Image    string   `json:"image"`
-	Requests Resource `json:"requests"`
-	Limits   Resource `json:"limits"`
-	Envs     []string `json:"envs"`
-	Mount    []string `json:"mounts"`
-}
-
-type SimplePod struct {
-	Name       string            `json:"name"`
-	Containers []Container       `json:"containers"`
-	Mounts     []PodVolume       `json:"mounts"`
-	Labels     map[string]string `json:"labels"`
-}
-
-type Deployment struct {
-	Name         string            `json:"name"`
-	Replicas     int               `json:"replicas"`
-	Pods         []SimplePod       `json:"pods"`
-	StrategyType string            `json:"strategyType"`
-	SelectorMap  map[string]string `json:"selector"`
-	Namespace    string            `json:"namespace"`
-}
-
-type EndPoint struct {
-	Name       string      `json:"name"`
-	Containers []SimplePod `json:"pods"`
-	Namespace  string      `json:"Namespace"`
-}
-
-type Service struct {
-	Name        string            `json:"name"`
-	Ports       []int32           `json:"ports"`
-	SelectorMap map[string]string `json:"selector"`
-	Namespace   string            `json:"namespace"`
-	Endpoints   []EndPoint        `json:"endpoints"`
-}
-
-type Cluster struct {
-	Deployments           []Deployment            `json:"deployments"`
-	Services              []Service               `json:"services"`
-	PersistentVolume      []PersistentVolume      `json:"persistentVolume"`
-	PersistentVolumeClaim []PersistentVolumeClaim `json:"persistentVolumeClaim"`
-}
 
 const (
 	label = "kube=kata"
@@ -254,21 +185,31 @@ func GetAllResources(client Client) Cluster {
 		cluster.Deployments = append(cluster.Deployments, strayDeployment)
 	}
 
+	endpointSlices, err := client.Client.DiscoveryV1().EndpointSlices(client.Namespace).List(context.Background(), listOptions)
+	endpoints := []EndPoint{}
+	if err != nil {
+		fmt.Println("Error getting endpoint slices: ", err)
+	}
+
+	fmt.Println("No. endpoint slices found: ", len(endpointSlices.Items))
+
+	for _, endpointSlice := range endpointSlices.Items {
+		for _, endpoint := range endpointSlice.Endpoints {
+			podName := strings.ToLower(endpoint.TargetRef.Name)
+			TrimmedPodName := strings.Replace(podName, "pod/", "", 1)
+			endpoints = append(endpoints, NewEndPoint(endpointSlice.Name, endpointSlice.Namespace, getPodByName(simplePods, TrimmedPodName)))
+		}
+	}
+
 	services, err := client.Client.CoreV1().Services("default").List(context.Background(), listOptions)
 	if err != nil {
 		return cluster
 	}
 	fmt.Println("No. services found: ", len(services.Items))
+
 	var servicesList []Service
 	for _, service := range services.Items {
-		var endpoints []EndPoint
-		for _, endpoint := range service.Spec.Ports {
-			endpoints = append(endpoints, EndPoint{
-				Name:       endpoint.Name,
-				Containers: simplePods,
-				Namespace:  service.Namespace,
-			})
-		}
+		endpoints = getEndpointsOfService(service, endpoints)
 		servicesList = append(servicesList, Service{
 			Name:        service.Name,
 			Ports:       getPortsFromV1Service(service),
@@ -278,12 +219,7 @@ func GetAllResources(client Client) Cluster {
 		})
 	}
 
-	var persistentVolumes []PersistentVolume
-	persistentVolumeList, err := client.Client.CoreV1().PersistentVolumes().List(context.Background(), listOptions)
-	if err != nil {
-		fmt.Println("Error getting persistent volumes: ", err)
-		return cluster
-	}
+	cluster.Services = servicesList
 
 	var persistentVolumeClaims []PersistentVolumeClaim
 	persistentVolumeClaimList, err := client.Client.CoreV1().PersistentVolumeClaims(client.Namespace).List(context.Background(), listOptions)
@@ -305,6 +241,15 @@ func GetAllResources(client Client) Cluster {
 		})
 	}
 
+	cluster.PersistentVolumeClaim = persistentVolumeClaims
+
+	var persistentVolumes []PersistentVolume
+	persistentVolumeList, err := client.Client.CoreV1().PersistentVolumes().List(context.Background(), listOptions)
+
+	if err != nil {
+		fmt.Println("Error getting persistent volumes: ", err)
+		return cluster
+	}
 	fmt.Println("No. persistent volumes found: ", len(persistentVolumeList.Items))
 	for _, persistentVolume := range persistentVolumeList.Items {
 		persistentVolumes = append(persistentVolumes, PersistentVolume{
@@ -314,8 +259,30 @@ func GetAllResources(client Client) Cluster {
 		})
 	}
 
+	cluster.PersistentVolume = persistentVolumes
+
 	return cluster
 
+}
+
+func getPodByName(pods []SimplePod, name string) SimplePod {
+	for _, pod := range pods {
+		if pod.Name == name {
+			return pod
+		}
+	}
+	return SimplePod{}
+}
+
+func getEndpointsOfService(service v1.Service, endpoints []EndPoint) []EndPoint {
+	serviceEndpoints := []EndPoint{}
+	for _, endpoint := range endpoints {
+		EndPointServiceIdentifier := strings.Split(endpoint.Name, "-")[0]
+		if service.Name == EndPointServiceIdentifier {
+			serviceEndpoints = append(serviceEndpoints, endpoint)
+		}
+	}
+	return serviceEndpoints
 }
 
 func getPortFromv1Container(container v1.Container) []int32 {

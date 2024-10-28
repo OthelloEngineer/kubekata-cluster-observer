@@ -17,7 +17,7 @@ func main() {
 	namespace := "default"
 	kubeclient := client.ClientFromServiceAccount(namespace)
 	levelRepository := levels.NewLevelRepository()
-	levelRepository.SetCurrentLevel(1)
+	levelRepository.SetCurrentLevel("what is KubeKata")
 	currentLevel, _ := levelRepository.GetCurrentLevel()
 	fmt.Println("Starting server with current level", currentLevel)
 	http.HandleFunc("/upload", func(w http.ResponseWriter, r *http.Request) {
@@ -88,6 +88,7 @@ func main() {
 				return
 			}
 		}
+
 		level, err := levelRepository.GetCurrentLevel()
 		if err != nil {
 			_, _ = w.Write([]byte("Error getting current level, likely no level set"))
@@ -96,6 +97,16 @@ func main() {
 		desiredCluster := level.GetDesiredCluster()
 		desiredClusterJSON, _ := json.Marshal(desiredCluster)
 		w.Write(desiredClusterJSON)
+	})
+
+	http.HandleFunc("/namespace", func(w http.ResponseWriter, r *http.Request) {
+		namespace := r.URL.Query().Get("namespace")
+		kubeclient.Namespace = namespace
+		_, err := w.Write([]byte("Set namespace to " + namespace))
+		if err != nil {
+			fmt.Print("Error writing response: " + err.Error())
+			return
+		}
 	})
 
 	http.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request) {
@@ -114,10 +125,22 @@ func main() {
 		}
 		cluster := client.GetAllResources(*kubeclient)
 		msg := r.URL.Query().Get("msg")
+		if msg == "solve" {
+			level.SetFinished()
+			fmt.Println("Level set to finished: " + level.GetName())
+			w.Write([]byte("Level set to finished: " + level.GetName()))
+			return
+		}
 		diff := level.GetClusterStatus(cluster, msg)
 		fmt.Println("Status:", diff)
 		if diff == "success" {
-			levelRepository.SetCurrentLevel(level.GetID() + 1)
+			level, err := levelRepository.GetCurrentLevel()
+			if err != nil {
+				fmt.Println("Error getting current level: ", err)
+				return
+			}
+			level.SetFinished()
+			fmt.Println("Level set to finished: " + level.GetName())
 		}
 		w.Write([]byte(diff))
 	})

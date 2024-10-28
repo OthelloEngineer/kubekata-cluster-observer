@@ -2,30 +2,34 @@ package levels
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/OthelloEngineer/kubekata-cluster-observer/client"
 )
 
 type Level interface {
-	GetID() int
 	GetName() string
 	GetDesiredCluster() client.Cluster
 	GetClusterStatus(cluster client.Cluster, msg string) string
+	SetFinished()
 }
 
 type LevelRepository struct {
 	levels       []Level
-	currentLevel int
+	currentLevel string
 }
 
 func NewLevelRepository() *LevelRepository {
 	levels := []Level{
-		new(Level1),
-		new(Level2),
+		new(WhatIsKubeKata),
+		new(ComponentsOfKubeKata),
+		new(DeployingTheApp),
+		new(CurlingTheApp),
+		new(dns_and_services)
 	}
 	repo := &LevelRepository{
 		levels:       levels,
-		currentLevel: 1,
+		currentLevel: "what is KubeKata",
 	}
 	return repo
 }
@@ -34,12 +38,12 @@ func (s *LevelRepository) GetAllLevels() []Level {
 	return s.levels
 }
 
-func (s *LevelRepository) GetLevelByID(id int) (Level, error) {
-	if s.currentLevel > len(s.levels) {
-		return nil, errors.New("current level out of bounds")
+func (s *LevelRepository) GetLevelByName(name string) (Level, error) {
+	if s.currentLevel == "" {
+		return nil, errors.New("no current level set")
 	}
 	for _, level := range s.levels {
-		if level.GetID() == id {
+		if strings.EqualFold(level.GetName(), name) {
 			return level, nil
 		}
 	}
@@ -47,13 +51,13 @@ func (s *LevelRepository) GetLevelByID(id int) (Level, error) {
 }
 
 func (s *LevelRepository) GetCurrentLevel() (Level, error) {
-	if s.currentLevel == 0 {
+	if s.currentLevel == "" {
 		return nil, errors.New("no current level set")
 	}
-	return s.GetLevelByID(s.currentLevel)
+	return s.GetLevelByName(s.currentLevel)
 }
 
-func (s *LevelRepository) SetCurrentLevel(id int) (Level, error) {
-	s.currentLevel = id
-	return s.GetLevelByID(id)
+func (s *LevelRepository) SetCurrentLevel(name string) (Level, error) {
+	s.currentLevel = name
+	return s.GetLevelByName(name)
 }

@@ -20,6 +20,24 @@ func main() {
 	levelRepository.SetCurrentLevel("what is KubeKata")
 	currentLevel, _ := levelRepository.GetCurrentLevel()
 	fmt.Println("Starting server with current level", currentLevel)
+
+	http.HandleFunc("/setLevel", func(w http.ResponseWriter, r *http.Request) {
+		levelName := r.URL.Query().Get("level")
+		_, err := levelRepository.SetCurrentLevel(levelName)
+		if err != nil {
+			_, err := w.Write([]byte("Error setting level: " + err.Error()))
+			if err != nil {
+				fmt.Print("Error writing response")
+				return
+			}
+		}
+		_, err = w.Write([]byte("Set level to " + levelName))
+		if err != nil {
+			fmt.Print("Error writing response")
+			return
+		}
+	})
+
 	http.HandleFunc("/upload", func(w http.ResponseWriter, r *http.Request) {
 		configText, _ := io.ReadAll(r.Body)
 		err := os.WriteFile("config", configText, 0644)

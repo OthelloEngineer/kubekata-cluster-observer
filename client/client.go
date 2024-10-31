@@ -101,7 +101,7 @@ func GetAllResources(client Client) Cluster {
 		PersistentVolumeClaim: []PersistentVolumeClaim{},
 	}
 
-	pods, err := client.Client.CoreV1().Pods(client.Namespace).List(context.Background(), listOptions)
+	pods, err := client.Client.CoreV1().Pods(client.Namespace).List(context.Background(), *new(metav1.ListOptions))
 	fmt.Println("No. pods found: ", len(pods.Items))
 	if err != nil {
 		fmt.Println("Error getting pods: ", err)
@@ -171,19 +171,19 @@ func GetAllResources(client Client) Cluster {
 
 	cluster.Deployments = deploymentsList
 
-	strayPods := findStrayPods(deploymentsList, simplePods) // this is a crude way of tracking unmanaged pods
-	if len(strayPods) > 0 {
-		fmt.Println("Stray pods found: ", len(strayPods))
-		strayDeployment := Deployment{
-			Name:         "Stray Pods",
-			Replicas:     len(strayPods),
-			Pods:         strayPods,
-			StrategyType: "None",
-			SelectorMap:  map[string]string{},
-			Namespace:    client.Namespace,
-		}
-		cluster.Deployments = append(cluster.Deployments, strayDeployment)
-	}
+	//strayPods := findStrayPods(deploymentsList, simplePods) // this is a crude way of tracking unmanaged pods
+	//if len(strayPods) > 0 {
+	//	fmt.Println("Stray pods found: ", len(strayPods))
+	//	strayDeployment := Deployment{
+	//		Name:         "Stray Pods",
+	//		Replicas:     len(strayPods),
+	//		Pods:         strayPods,
+	//		StrategyType: "None",
+	//		SelectorMap:  map[string]string{},
+	//		Namespace:    client.Namespace,
+	//	}
+	//	cluster.Deployments = append(cluster.Deployments, strayDeployment)
+	//}
 
 	endpointSlices, err := client.Client.DiscoveryV1().EndpointSlices(client.Namespace).List(context.Background(), listOptions)
 	endpoints := []EndPoint{}

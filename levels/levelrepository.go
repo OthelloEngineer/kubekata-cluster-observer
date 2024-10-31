@@ -29,7 +29,7 @@ func NewLevelRepository() *LevelRepository {
 		new(CurlingTheApp),
 		new(dns_and_services),
 		new(ScalingTheApplication),
-		new(ExposingToTheWorld)
+		new(ExposingToTheWorld),
 	}
 	repo := &LevelRepository{
 		levels:       levels,

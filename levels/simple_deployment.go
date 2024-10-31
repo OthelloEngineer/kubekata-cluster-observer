@@ -21,7 +21,7 @@ func expectedDeployment() client.Deployment {
 		1,
 		[]client.SimplePod{
 			client.NewSimplePod("hello-go", []client.Container{
-				client.NewContainer("hello-go", "othelloengineer/hello-go:1.0.0", []int32{8080}, *new(client.Resource), *new(client.Resource), []string{}, []string{}),
+				client.NewContainer("hello-go", "othelloengineer/hello-go:1.0", []int32{8080}, *new(client.Resource), *new(client.Resource), []string{}, []string{}),
 			},
 				[]client.PodVolume{}, map[string]string{}),
 		},

@@ -14,7 +14,7 @@ func (l *CurlingTheApp) GetName() string {
 	return "curling the app"
 }
 
-func (l *CurlingTheApp) GetDesiredCluster() client.Cluster {
+func (l *CurlingTheApp) GetDesiredCluster(k8sclient client.Client) client.Cluster {
 
 	return client.Cluster{
 		Deployments:           []client.Deployment{expectedDeployment()},
@@ -24,7 +24,7 @@ func (l *CurlingTheApp) GetDesiredCluster() client.Cluster {
 	}
 }
 
-func (l *CurlingTheApp) GetClusterStatus(cluster client.Cluster, msg string, k8sclient client.Client) string {
+func (l *CurlingTheApp) GetClusterStatus(cluster client.Cluster, msg string) string {
 	fmt.Println("msg: ", msg)
 	if msg == "COOL MESSAGE!!!" {
 		return "success"

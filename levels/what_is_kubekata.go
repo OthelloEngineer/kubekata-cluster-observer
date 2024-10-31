@@ -17,12 +17,12 @@ func (l *WhatIsKubeKata) GetName() string {
 	return "what is kubekata"
 }
 
-func (l *WhatIsKubeKata) GetDesiredCluster() client.Cluster {
+func (l *WhatIsKubeKata) GetDesiredCluster(client client.Client) client.Cluster {
 
 	return levelutils.GetEmptyCluster()
 }
 
-func (l *WhatIsKubeKata) GetClusterStatus(cluster client.Cluster, msg string, client client.Client) string {
+func (l *WhatIsKubeKata) GetClusterStatus(cluster client.Cluster, msg string) string {
 	return "success"
 }
 

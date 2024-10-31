@@ -18,7 +18,7 @@ func (l *ScalingTheApp) GetIsFinished() bool {
 	return l.isFinished
 }
 
-func (l *ScalingTheApp) GetDesiredCluster() client.Cluster {
+func (l *ScalingTheApp) GetDesiredCluster(k8sclient client.Client) client.Cluster {
 	pod := expectedDeployment().Pods[0]
 	pods := []client.SimplePod{pod, pod, pod}
 	deployment := expectedDeployment()
@@ -33,7 +33,7 @@ func (l *ScalingTheApp) GetDesiredCluster() client.Cluster {
 	}
 }
 
-func (l *ScalingTheApp) GetClusterStatus(cluster client.Cluster, msg string, k8sclient client.Client) string {
+func (l *ScalingTheApp) GetClusterStatus(cluster client.Cluster, msg string) string {
 	if cluster.Deployments[0].Name != "hello-go" {
 		return "There should be a deployment named hello-go"
 	}

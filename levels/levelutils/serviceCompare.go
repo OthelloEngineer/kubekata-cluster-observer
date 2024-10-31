@@ -6,7 +6,7 @@ import (
 	"github.com/OthelloEngineer/kubekata-cluster-observer/client"
 )
 
-func CompareServices(expected client.Service, current client.Service) string {
+func CompareServices(expected client.Service, current client.Service, expectedEndpoints []client.EndPoint) string {
 	if expected.Name != current.Name {
 		return "Service name is not correct"
 	}
@@ -33,15 +33,12 @@ func CompareServices(expected client.Service, current client.Service) string {
 		}
 	}
 
-	if len(expected.Endpoints) < 1 {
+	if len(expectedEndpoints) < 1 {
 		return "success"
 	}
 
-	expectedEndpointCount := len(expected.Endpoints)
-	currentEndpointCount := len(current.Endpoints)
-	if expectedEndpointCount != currentEndpointCount {
-		return fmt.Sprintf("Expected %d points, but the service is connected to %d pods ", expectedEndpointCount, currentEndpointCount)
+	if len(expected.Endpoints) != len(current.Endpoints) {
+		return fmt.Sprintf("Expected %d endpoints, but found %d for label '%s,%s'", len(expected.Endpoints), len(current.Endpoints), current.SelectorMap["app"], current.SelectorMap["version"])
 	}
-
 	return "success"
 }

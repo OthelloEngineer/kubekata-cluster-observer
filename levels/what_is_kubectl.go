@@ -13,12 +13,12 @@ func (l *WhatIsKubectl) GetName() string {
 	return "what is kubectl"
 }
 
-func (l *WhatIsKubectl) GetDesiredCluster() client.Cluster {
+func (l *WhatIsKubectl) GetDesiredCluster(client client.Client) client.Cluster {
 
 	return levelutils.GetEmptyCluster()
 }
 
-func (l *WhatIsKubectl) GetClusterStatus(cluster client.Cluster, msg string, client client.Client) string {
+func (l *WhatIsKubectl) GetClusterStatus(cluster client.Cluster, msg string) string {
 	return "success"
 }
 

@@ -30,7 +30,7 @@ func expectedDeployment() client.Deployment {
 	return deployment
 }
 
-func (l *DeployingTheApp) GetDesiredCluster() client.Cluster {
+func (l *DeployingTheApp) GetDesiredCluster(k8sclient client.Client) client.Cluster {
 	return client.Cluster{
 		Deployments:           []client.Deployment{expectedDeployment()},
 		Services:              *new([]client.Service),
@@ -39,7 +39,7 @@ func (l *DeployingTheApp) GetDesiredCluster() client.Cluster {
 	}
 }
 
-func (l *DeployingTheApp) GetClusterStatus(cluster client.Cluster, msg string, k8sclient client.Client) string {
+func (l *DeployingTheApp) GetClusterStatus(cluster client.Cluster, msg string) string {
 	result := levelutils.CompareImagesAndPortOfDeployments(cluster.Deployments, []client.Deployment{expectedDeployment()})
 	return result
 }

@@ -17,7 +17,7 @@ func (l *dns_and_services) SetFinished() {
 	l.isFinished = true
 }
 
-func (l *dns_and_services) GetDesiredCluster() client.Cluster {
+func (l *dns_and_services) GetDesiredCluster(k8sclient client.Client) client.Cluster {
 	dep := expectedDeployment()
 	svc := getExpectedService()
 	return client.Cluster{
@@ -44,11 +44,12 @@ func getExpectedService() client.Service {
 	return service
 }
 
-func (l *dns_and_services) GetClusterStatus(cluster client.Cluster, msg string, k8sclient client.Client) string {
+func (l *dns_and_services) GetClusterStatus(cluster client.Cluster, msg string) string {
 	if len(cluster.Services) != 1 {
 		return "There should be 1 service; found: " + string(len(cluster.Services))
 	}
-	statusMsg := levelutils.CompareServices(cluster.Services[0], getExpectedService())
+
+	statusMsg := levelutils.CompareServices(cluster.Services[0], getExpectedService(), getExpectedService().Endpoints)
 	if statusMsg != "success" {
 		return statusMsg
 	}

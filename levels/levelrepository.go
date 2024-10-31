@@ -10,8 +10,8 @@ import (
 
 type Level interface {
 	GetName() string
-	GetDesiredCluster() client.Cluster
-	GetClusterStatus(cluster client.Cluster, msg string, k8sclient client.Client) string
+	GetDesiredCluster(client client.Client) client.Cluster
+	GetClusterStatus(cluster client.Cluster, msg string) string
 	SetFinished()
 	GetIsFinished() bool
 }

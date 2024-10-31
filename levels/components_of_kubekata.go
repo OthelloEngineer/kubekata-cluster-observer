@@ -17,7 +17,7 @@ func (l *ComponentsOfKubeKata) GetName() string {
 	return "components of kubekata"
 }
 
-func (l *ComponentsOfKubeKata) GetDesiredCluster() client.Cluster {
+func (l *ComponentsOfKubeKata) GetDesiredCluster(k8sclient client.Client) client.Cluster {
 	return client.Cluster{
 		Deployments: []client.Deployment{
 			{
@@ -47,7 +47,7 @@ func (l *ComponentsOfKubeKata) GetDesiredCluster() client.Cluster {
 	}
 }
 
-func (l *ComponentsOfKubeKata) GetClusterStatus(cluster client.Cluster, msg string, k8sclient client.Client) string {
+func (l *ComponentsOfKubeKata) GetClusterStatus(cluster client.Cluster, msg string) string {
 	return "success"
 }
 

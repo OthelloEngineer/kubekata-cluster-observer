@@ -16,8 +16,8 @@ func (l *DeployingTheApp) GetName() string {
 func expectedDeployment() client.Deployment {
 	deployment := client.NewDeployment(
 		"hello-go",
-		"app",
-		"hello-go",
+		"rollingUpdate",
+		"",
 		1,
 		[]client.SimplePod{
 			client.NewSimplePod("hello-go", []client.Container{

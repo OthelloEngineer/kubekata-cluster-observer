@@ -40,7 +40,7 @@ func (l *DeployingTheApp) GetDesiredCluster() client.Cluster {
 }
 
 func (l *DeployingTheApp) GetClusterStatus(cluster client.Cluster, msg string) string {
-	result := levelutils.CompareImagesAndPortOfDeployments([]client.Deployment{expectedDeployment()}, cluster.Deployments)
+	result := levelutils.CompareImagesAndPortOfDeployments(cluster.Deployments, []client.Deployment{expectedDeployment()})
 	return result
 }
 

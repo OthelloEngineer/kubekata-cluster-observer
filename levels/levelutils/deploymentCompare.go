@@ -2,6 +2,7 @@ package levelutils
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/OthelloEngineer/kubekata-cluster-observer/client"
 )
@@ -22,7 +23,8 @@ func CompareDeployments(currentDeployment client.Deployment, expectedDeployment 
 
 	for j, expectedPod := range expectedDeployment.Pods {
 		currentPod := currentDeployment.Pods[j]
-		if currentPod.Name != expectedPod.Name {
+		// Expected pod name should be in the current pod name
+		if !strings.Contains(currentPod.Name, expectedPod.Name) {
 			return fmt.Sprintf("Pod name should be %s; found: %s", expectedPod.Name, currentPod.Name)
 		}
 

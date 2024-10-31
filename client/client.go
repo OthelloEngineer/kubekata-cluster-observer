@@ -216,6 +216,7 @@ func GetAllResources(client Client) Cluster {
 			SelectorMap: service.Spec.Selector,
 			Namespace:   service.Namespace,
 			Endpoints:   endpoints,
+			Type:        string(service.Spec.Type),
 		})
 	}
 

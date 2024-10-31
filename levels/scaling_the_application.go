@@ -2,23 +2,23 @@ package levels
 
 import "github.com/OthelloEngineer/kubekata-cluster-observer/client"
 
-type ScalingTheApplication struct {
+type ScalingTheApp struct {
 	isFinished bool
 }
 
-func (l *ScalingTheApplication) GetName() string {
-	return "scaling the application"
+func (l *ScalingTheApp) GetName() string {
+	return "scaling the app"
 }
 
-func (l *ScalingTheApplication) SetFinished() {
+func (l *ScalingTheApp) SetFinished() {
 	l.isFinished = true
 }
 
-func (l *ScalingTheApplication) GetIsFinished() bool {
+func (l *ScalingTheApp) GetIsFinished() bool {
 	return l.isFinished
 }
 
-func (l *ScalingTheApplication) GetDesiredCluster() client.Cluster {
+func (l *ScalingTheApp) GetDesiredCluster() client.Cluster {
 	pod := expectedDeployment().Pods[0]
 	pods := []client.SimplePod{pod, pod, pod}
 	deployment := expectedDeployment()
@@ -33,18 +33,18 @@ func (l *ScalingTheApplication) GetDesiredCluster() client.Cluster {
 	}
 }
 
-func (l *ScalingTheApplication) GetClusterStatus(cluster client.Cluster, msg string) string {
+func (l *ScalingTheApp) GetClusterStatus(cluster client.Cluster, msg string) string {
 
 	if cluster.Deployments[0].Name != "hello-go" {
 		return "There should be a deployment named hello-go"
 	}
 
 	if len(cluster.Deployments) != 1 {
-		return "There should be 1 deployment; found: " + string(len(cluster.Deployments))
+		return "There should be 1 deployment; found: " + string(rune(len(cluster.Deployments)))
 	}
 
 	if len(cluster.Deployments[0].Pods) != 3 {
-		return "There should be 3 pods; found: " + string(len(cluster.Deployments[0].Pods))
+		return "There should be 3 pods; found: " + string(rune(len(cluster.Deployments[0].Pods)))
 	}
 
 	return "success"

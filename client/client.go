@@ -197,6 +197,7 @@ func GetAllResources(client Client) Cluster {
 		for _, endpoint := range endpointSlice.Endpoints {
 			podName := strings.ToLower(endpoint.TargetRef.Name)
 			TrimmedPodName := strings.Replace(podName, "pod/", "", 1)
+			fmt.Println("Endpoint slice: ", endpointSlice.Name, "Pod name: ", TrimmedPodName)
 			endpoints = append(endpoints, NewEndPoint(endpointSlice.Name, endpointSlice.Namespace, getPodByName(simplePods, TrimmedPodName)))
 		}
 	}
@@ -209,13 +210,21 @@ func GetAllResources(client Client) Cluster {
 
 	var servicesList []Service
 	for _, service := range services.Items {
+		svcEndpoints := []EndPoint{}
+
+		for _, endpoint := range endpoints {
+			if strings.Contains(endpoint.Name, service.Name) {
+				svcEndpoints = append(svcEndpoints, endpoint)
+			}
+		}
+
 		endpoints = getEndpointsOfService(service, endpoints)
 		servicesList = append(servicesList, Service{
 			Name:        service.Name,
 			Ports:       getPortsFromV1Service(service),
 			SelectorMap: service.Spec.Selector,
 			Namespace:   service.Namespace,
-			Endpoints:   endpoints,
+			Endpoints:   svcEndpoints,
 			Type:        string(service.Spec.Type),
 		})
 	}

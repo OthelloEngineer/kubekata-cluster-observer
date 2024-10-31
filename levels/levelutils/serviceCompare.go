@@ -38,7 +38,8 @@ func CompareServices(expected client.Service, current client.Service, expectedEn
 	}
 
 	if len(expected.Endpoints) != len(current.Endpoints) {
-		return fmt.Sprintf("Expected %d endpoints, but found %d for label '%s,%s'", len(expected.Endpoints), len(current.Endpoints), current.SelectorMap["app"], current.SelectorMap["version"])
+		return fmt.Sprintf("Expected %d endpoints, but found %d for label '%s,%s' at service: %s", len(expected.Endpoints), len(current.Endpoints), current.SelectorMap["app"], current.SelectorMap["version"],
+			current.Name)
 	}
 	return "success"
 }

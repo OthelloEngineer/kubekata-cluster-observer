@@ -114,7 +114,7 @@ func main() {
 			_, _ = w.Write([]byte("Error getting current level, likely no level set"))
 			return
 		}
-		desiredCluster := level.GetDesiredCluster()
+		desiredCluster := level.GetDesiredCluster(client.Client{})
 		desiredClusterJSON, _ := json.Marshal(desiredCluster)
 		w.Write(desiredClusterJSON)
 	})

@@ -49,7 +49,7 @@ func (l *dns_and_services) GetClusterStatus(cluster client.Cluster, msg string) 
 		return "There should be 1 service; found: " + string(len(cluster.Services))
 	}
 
-	statusMsg := levelutils.CompareServices(cluster.Services[0], getExpectedService(), getExpectedService().Endpoints)
+	statusMsg := levelutils.CompareServices(getExpectedService(), cluster.Services[0], getExpectedService().Endpoints)
 	if statusMsg != "success" {
 		return statusMsg
 	}

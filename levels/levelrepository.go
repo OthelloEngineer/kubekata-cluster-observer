@@ -11,7 +11,7 @@ import (
 type Level interface {
 	GetName() string
 	GetDesiredCluster() client.Cluster
-	GetClusterStatus(cluster client.Cluster, msg string) string
+	GetClusterStatus(cluster client.Cluster, msg string, k8sclient client.Client) string
 	SetFinished()
 	GetIsFinished() bool
 }
@@ -25,6 +25,7 @@ func NewLevelRepository() *LevelRepository {
 	levels := []Level{
 		new(WhatIsKubeKata),
 		new(ComponentsOfKubeKata),
+		new(WhatIsKubectl),
 		new(DeployingTheApp),
 		new(CurlingTheApp),
 		new(dns_and_services),

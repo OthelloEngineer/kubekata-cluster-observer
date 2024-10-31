@@ -22,7 +22,7 @@ func (l *WhatIsKubeKata) GetDesiredCluster() client.Cluster {
 	return levelutils.GetEmptyCluster()
 }
 
-func (l *WhatIsKubeKata) GetClusterStatus(cluster client.Cluster, msg string) string {
+func (l *WhatIsKubeKata) GetClusterStatus(cluster client.Cluster, msg string, client client.Client) string {
 	return "success"
 }
 

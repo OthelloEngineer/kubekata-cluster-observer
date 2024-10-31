@@ -33,7 +33,7 @@ func (l *ScalingTheApp) GetDesiredCluster() client.Cluster {
 	}
 }
 
-func (l *ScalingTheApp) GetClusterStatus(cluster client.Cluster, msg string) string {
+func (l *ScalingTheApp) GetClusterStatus(cluster client.Cluster, msg string, k8sclient client.Client) string {
 	if cluster.Deployments[0].Name != "hello-go" {
 		return "There should be a deployment named hello-go"
 	}

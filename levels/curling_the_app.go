@@ -24,7 +24,7 @@ func (l *CurlingTheApp) GetDesiredCluster() client.Cluster {
 	}
 }
 
-func (l *CurlingTheApp) GetClusterStatus(cluster client.Cluster, msg string) string {
+func (l *CurlingTheApp) GetClusterStatus(cluster client.Cluster, msg string, k8sclient client.Client) string {
 	fmt.Println("msg: ", msg)
 	if msg == "COOL MESSAGE!!!" {
 		return "success"

@@ -32,7 +32,7 @@ func (l *ExposingToTheWorld) GetDesiredCluster() client.Cluster {
 	}
 }
 
-func (l *ExposingToTheWorld) GetClusterStatus(cluster client.Cluster, msg string) string {
+func (l *ExposingToTheWorld) GetClusterStatus(cluster client.Cluster, msg string, k8sclient client.Client) string {
 	if len(cluster.Services) != 1 {
 		return "There should be 1 service; found: " + string(len(cluster.Services))
 	}

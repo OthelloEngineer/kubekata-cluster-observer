@@ -47,7 +47,7 @@ func (l *ComponentsOfKubeKata) GetDesiredCluster() client.Cluster {
 	}
 }
 
-func (l *ComponentsOfKubeKata) GetClusterStatus(cluster client.Cluster, msg string) string {
+func (l *ComponentsOfKubeKata) GetClusterStatus(cluster client.Cluster, msg string, k8sclient client.Client) string {
 	return "success"
 }
 

@@ -5,27 +5,27 @@ import (
 	"github.com/OthelloEngineer/kubekata-cluster-observer/levels/levelutils"
 )
 
-type WhatIsKubbectl struct {
+type WhatIsKubectl struct {
 	isFinished bool
 }
 
-func (l *WhatIsKubbectl) GetName() string {
+func (l *WhatIsKubectl) GetName() string {
 	return "what is kubectl"
 }
 
-func (l *WhatIsKubbectl) GetDesiredCluster() client.Cluster {
+func (l *WhatIsKubectl) GetDesiredCluster() client.Cluster {
 
 	return levelutils.GetEmptyCluster()
 }
 
-func (l *WhatIsKubbectl) GetClusterStatus(cluster client.Cluster, msg string) string {
+func (l *WhatIsKubectl) GetClusterStatus(cluster client.Cluster, msg string, client client.Client) string {
 	return "success"
 }
 
-func (l *WhatIsKubbectl) SetFinished() {
+func (l *WhatIsKubectl) SetFinished() {
 	l.isFinished = true
 }
 
-func (l *WhatIsKubbectl) GetIsFinished() bool {
+func (l *WhatIsKubectl) GetIsFinished() bool {
 	return l.isFinished
 }

@@ -24,8 +24,10 @@ func main() {
 	http.HandleFunc("/setLevel", func(w http.ResponseWriter, r *http.Request) {
 		levelName := r.URL.Query().Get("level")
 		_, err := levelRepository.SetCurrentLevel(levelName)
+		fmt.Println("Set level to", levelName)
 		if err != nil {
 			_, err := w.Write([]byte("Error setting level: " + err.Error()))
+			fmt.Print("Error setting level: ", err)
 			if err != nil {
 				fmt.Print("Error writing response")
 				return
@@ -141,6 +143,12 @@ func main() {
 			w.Write([]byte(msg))
 			return
 		}
+
+		if level.GetIsFinished() {
+			w.Write([]byte("success"))
+			return
+		}
+
 		cluster := client.GetAllResources(*kubeclient)
 		msg := r.URL.Query().Get("msg")
 		if msg == "solve" {
@@ -152,11 +160,6 @@ func main() {
 		diff := level.GetClusterStatus(cluster, msg)
 		fmt.Println("Status:", diff)
 		if diff == "success" {
-			level, err := levelRepository.GetCurrentLevel()
-			if err != nil {
-				fmt.Println("Error getting current level: ", err)
-				return
-			}
 			level.SetFinished()
 			fmt.Println("Level set to finished: " + level.GetName())
 		}

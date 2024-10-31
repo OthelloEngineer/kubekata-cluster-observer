@@ -14,7 +14,7 @@ type ComponentsOfKubeKata struct {
 }
 
 func (l *ComponentsOfKubeKata) GetName() string {
-	return "what is a pod"
+	return "components of kubekata"
 }
 
 func (l *ComponentsOfKubeKata) GetDesiredCluster() client.Cluster {
@@ -53,4 +53,8 @@ func (l *ComponentsOfKubeKata) GetClusterStatus(cluster client.Cluster, msg stri
 
 func (l *ComponentsOfKubeKata) SetFinished() {
 	l.isFinished = true
+}
+
+func (l *ComponentsOfKubeKata) GetIsFinished() bool {
+	return l.isFinished
 }

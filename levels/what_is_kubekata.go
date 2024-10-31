@@ -29,3 +29,7 @@ func (l *WhatIsKubeKata) GetClusterStatus(cluster client.Cluster, msg string) st
 func (l *WhatIsKubeKata) SetFinished() {
 	l.isFinished = true
 }
+
+func (l *WhatIsKubeKata) GetIsFinished() bool {
+	return l.isFinished
+}

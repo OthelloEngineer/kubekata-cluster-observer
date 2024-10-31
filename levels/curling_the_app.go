@@ -35,3 +35,7 @@ func (l *CurlingTheApp) GetClusterStatus(cluster client.Cluster, msg string) str
 func (l *CurlingTheApp) SetFinished() {
 	l.isFinished = true
 }
+
+func (l *CurlingTheApp) GetIsFinished() bool {
+	return l.isFinished
+}

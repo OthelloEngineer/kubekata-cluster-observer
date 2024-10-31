@@ -6,11 +6,11 @@ import (
 )
 
 type DeployingTheApp struct {
-	isFinishs bool
+	isFinished bool
 }
 
 func (l *DeployingTheApp) GetName() string {
-	return "deploying the app"
+	return "simple deployment"
 }
 
 func expectedDeployment() client.Deployment {
@@ -45,5 +45,9 @@ func (l *DeployingTheApp) GetClusterStatus(cluster client.Cluster, msg string) s
 }
 
 func (l *DeployingTheApp) SetFinished() {
-	l.isFinishs = true
+	l.isFinished = true
+}
+
+func (l *DeployingTheApp) GetIsFinished() bool {
+	return l.isFinished
 }

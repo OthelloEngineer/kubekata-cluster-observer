@@ -2,6 +2,7 @@ package levels
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/OthelloEngineer/kubekata-cluster-observer/client"
@@ -12,6 +13,7 @@ type Level interface {
 	GetDesiredCluster() client.Cluster
 	GetClusterStatus(cluster client.Cluster, msg string) string
 	SetFinished()
+	GetIsFinished() bool
 }
 
 type LevelRepository struct {
@@ -40,12 +42,15 @@ func (s *LevelRepository) GetAllLevels() []Level {
 
 func (s *LevelRepository) GetLevelByName(name string) (Level, error) {
 	if s.currentLevel == "" {
+		println("no current level set, level name: ", name)
 		return nil, errors.New("no current level set")
 	}
 	for _, level := range s.levels {
 		if strings.EqualFold(level.GetName(), name) {
+			fmt.Println("EQUAL: repo level name: ", level.GetName(), "searched for: ", name)
 			return level, nil
 		}
+		fmt.Println("NOT EQUAL: repo level name: ", level.GetName(), "searched for: ", name)
 	}
 	return nil, errors.New("level not found")
 }

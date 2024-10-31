@@ -60,3 +60,7 @@ func (l *dns_and_services) GetClusterStatus(cluster client.Cluster, msg string) 
 
 	return statusMsg
 }
+
+func (l *dns_and_services) GetIsFinished() bool {
+	return l.isFinished
+}

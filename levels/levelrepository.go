@@ -28,6 +28,8 @@ func NewLevelRepository() *LevelRepository {
 		new(DeployingTheApp),
 		new(CurlingTheApp),
 		new(dns_and_services),
+		new(ScalingTheApplication),
+		new(ExposingToTheWorld)
 	}
 	repo := &LevelRepository{
 		levels:       levels,

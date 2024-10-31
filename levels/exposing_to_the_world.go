@@ -31,3 +31,15 @@ func (l *ExposingToTheWorld) GetDesiredCluster() client.Cluster {
 		PersistentVolumeClaim: *new([]client.PersistentVolumeClaim),
 	}
 }
+
+func (l *ExposingToTheWorld) GetClusterStatus(cluster client.Cluster, msg string) string {
+	if len(cluster.Services) != 1 {
+		return "There should be 1 service; found: " + string(len(cluster.Services))
+	}
+
+	if cluster.Services[0].Type != "NodePort" {
+		return "The service type should be NodePort"
+	}
+
+	return "success"
+}
